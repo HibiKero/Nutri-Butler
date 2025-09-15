@@ -8,6 +8,7 @@ class NutriButlerApplicationTests {
 
     @Test
     void contextLoads() {
+        // 测试Spring上下文是否能正常加载
     }
 
 }

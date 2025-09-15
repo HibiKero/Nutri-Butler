@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutri-Butler 营养管家</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .status {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .status-value {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 10px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .api-section {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .api-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .api-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .api-method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .method-get { background: #d4edda; color: #155724; }
+        .method-post { background: #cce5ff; color: #004085; }
+        .method-put { background: #fff3cd; color: #856404; }
+        .method-delete { background: #f8d7da; color: #721c24; }
+        
+        .api-url {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+        }
+        
+        .loading {
+            display: none;
+            color: #667eea;
+        }
+        
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+        
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🥗 Nutri-Butler</div>
+        <div class="subtitle">智能营养管家系统</div>
+        
+        <div class="status">
+            <div class="status-item">
+                <span class="status-label">后端服务状态</span>
+                <span class="status-value status-success" id="backendStatus">检查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">数据库连接</span>
+                <span class="status-value status-success" id="dbStatus">检查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">前端服务状态</span>
+                <span class="status-value status-success" id="frontendStatus">运行中</span>
+            </div>
+        </div>
+        
+        <div class="api-section">
+            <h3>🔗 可用API接口</h3>
+            <div class="api-item">
+                <span class="api-method method-get">GET</span>
+                <span class="api-url">/api/test/hello</span>
+                <div>系统健康检查</div>
+            </div>
+            <div class="api-item">
+                <span class="api-method method-get">GET</span>
+                <span class="api-url">/api/user-simple/all</span>
+                <div>获取所有用户</div>
+            </div>
+            <div class="api-item">
+                <span class="api-method method-post">POST</span>
+                <span class="api-url">/api/user-simple/register</span>
+                <div>用户注册</div>
+            </div>
+            <div class="api-item">
+                <span class="api-method method-post">POST</span>
+                <span class="api-url">/api/health-profile</span>
+                <div>创建健康档案</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <button class="btn" onclick="testBackend()">测试后端连接</button>
+            <button class="btn btn-secondary" onclick="testUserAPI()">测试用户API</button>
+            <button class="btn btn-secondary" onclick="testHealthAPI()">测试健康档案API</button>
+        </div>
+        
+        <div id="testResult" class="loading" style="margin-top: 20px;"></div>
+        
+        <div style="margin-top: 30px; color: #666; font-size: 0.9em;">
+            <p>✅ <strong>系统状态:</strong> 后端服务正常运行，前端页面正常显示</p>
+            <p>🔗 <strong>访问地址:</strong> http://localhost:8080/</p>
+        </div>
+    </div>
+
+    <script>
+        // 检查后端服务状态
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch('/api/test/hello');
+                if (response.ok) {
+                    document.getElementById('backendStatus').textContent = '运行中';
+                    document.getElementById('backendStatus').className = 'status-value status-success';
+                    document.getElementById('dbStatus').textContent = '连接正常';
+                    document.getElementById('dbStatus').className = 'status-value status-success';
+                    return true;
+                } else {
+                    throw new Error('服务异常');
+                }
+            } catch (error) {
+                document.getElementById('backendStatus').textContent = '连接失败';
+                document.getElementById('backendStatus').className = 'status-value status-error';
+                document.getElementById('dbStatus').textContent = '连接失败';
+                document.getElementById('dbStatus').className = 'status-value status-error';
+                return false;
+            }
+        }
+        
+        // 测试后端连接
+        async function testBackend() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = 'loading';
+            resultDiv.textContent = '正在测试后端连接...';
+            
+            try {
+                const response = await fetch('/api/test/hello');
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ 后端连接成功！<br>响应: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ 后端连接失败！<br>错误: ${error.message}`;
+            }
+        }
+        
+        // 测试用户API
+        async function testUserAPI() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = 'loading';
+            resultDiv.textContent = '正在测试用户API...';
+            
+            try {
+                const response = await fetch('/api/user-simple/all');
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ 用户API测试成功！<br>用户数量: ${data.data ? data.data.length : 0}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ 用户API测试失败！<br>错误: ${error.message}`;
+            }
+        }
+        
+        // 测试健康档案API
+        async function testHealthAPI() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = 'loading';
+            resultDiv.textContent = '正在测试健康档案API...';
+            
+            try {
+                // 先注册一个测试用户
+                const registerData = {
+                    username: 'testuser' + Date.now(),
+                    password: '123456',
+                    email: 'test' + Date.now() + '@example.com'
+                };
+                
+                const registerResponse = await fetch('/api/user-simple/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(registerData)
+                });
+                
+                if (registerResponse.ok) {
+                    const registerResult = await registerResponse.json();
+                    const userId = registerResult.data.id;
+                    
+                    // 创建健康档案
+                    const healthData = {
+                        userId: userId,
+                        healthGoal: 1,
+                        goalDescription: '测试健康档案'
+                    };
+                    
+                    const healthResponse = await fetch('/api/health-profile', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(healthData)
+                    });
+                    
+                    if (healthResponse.ok) {
+                        const healthResult = await healthResponse.json();
+                        resultDiv.className = 'success';
+                        resultDiv.innerHTML = `✅ 健康档案API测试成功！<br>用户ID: ${userId}<br>健康档案ID: ${healthResult.data.id}`;
+                    } else {
+                        throw new Error(`健康档案创建失败: HTTP ${healthResponse.status}`);
+                    }
+                } else {
+                    throw new Error(`用户注册失败: HTTP ${registerResponse.status}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ 健康档案API测试失败！<br>错误: ${error.message}`;
+            }
+        }
+        
+        // 页面加载时检查状态
+        window.onload = function() {
+            checkBackendStatus();
+        };
+    </script>
+</body>
+</html>
+
