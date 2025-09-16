@@ -67,13 +67,34 @@ public class NutritionController {
     }
 
     /**
-     * 根据ID获取食材详细信息
+     * 根据ID获取食材详细信息 - 优先从数据库查询，没有则调用API
      */
     @GetMapping("/ingredient/{id}")
     public Result<Ingredient> getIngredientById(@PathVariable Integer id) {
         try {
+            // 1. 首先从数据库根据Spoonacular ID查询
+            java.util.Optional<Ingredient> dbResult = ingredientRepository.findBySpoonacularId(id);
+            if (dbResult.isPresent()) {
+                Ingredient ingredient = dbResult.get();
+                // 如果数据库中的食材有完整营养信息，直接返回
+                if (ingredient.getCalories() != null && ingredient.getProtein() != null) {
+                    return Result.success(ingredient);
+                }
+            }
+            
+            // 2. 数据库中没有或营养信息不完整，调用API查询
             Ingredient ingredient = spoonacularService.getIngredientById(id);
             if (ingredient != null) {
+                // 3. 保存到数据库（持久化）
+                try {
+                    if (ingredient.getSpoonacularId() != null && 
+                        ingredientRepository.findBySpoonacularId(ingredient.getSpoonacularId()).isEmpty()) {
+                        ingredientRepository.save(ingredient);
+                    }
+                } catch (Exception e) {
+                    System.err.println("保存食材失败: " + ingredient.getName() + " - " + e.getMessage());
+                }
+                
                 return Result.success(ingredient);
             } else {
                 return Result.error("食材不存在");
