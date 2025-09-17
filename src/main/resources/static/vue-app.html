@@ -1025,8 +1025,8 @@
                         <div class="form-group">
                             <label>搜索食材</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="text" id="pantryIngredientSearch" placeholder="搜索食材..." style="flex: 1;" onkeyup="searchIngredientsForPantry()">
-                                <button class="btn" onclick="searchIngredientsWithAPI()">搜索</button>
+                                <input type="text" id="pantryIngredientSearch" placeholder="搜索食材..." style="flex: 1;">
+                                <button class="btn" onclick="searchIngredientsForPantry()">搜索</button>
                             </div>
                             <div id="pantryIngredientResults" class="ingredient-search-results"></div>
                         </div>
@@ -2061,7 +2061,7 @@
         let selectedIngredientForPantry = null;
         let pantryData = [];
 
-        // 搜索食材用于添加到库存 - 只搜索数据库
+        // 搜索食材用于添加到库存 - 数据库优先策略
         async function searchIngredientsForPantry() {
             const query = document.getElementById('pantryIngredientSearch').value.trim();
             if (!query) {
@@ -2070,12 +2070,18 @@
             }
 
             try {
-                // 只搜索数据库中的食材
+                // 先搜索数据库
                 const response = await fetch(`/api/nutrition/search?query=${encodeURIComponent(query)}&number=10`);
                 const result = await response.json();
 
                 if (response.ok && result.code === 200) {
-                    displayPantryIngredientResults(result.data);
+                    if (result.data.length > 0) {
+                        // 数据库中有结果，直接显示
+                        displayPantryIngredientResults(result.data);
+                    } else {
+                        // 数据库中没有结果，提示用户
+                        document.getElementById('pantryIngredientResults').innerHTML = '<p>数据库中没有找到相关食材，请尝试其他搜索词或使用分类浏览</p>';
+                    }
                 } else {
                     document.getElementById('pantryIngredientResults').innerHTML = '<p>搜索失败: ' + (result.message || '未知错误') + '</p>';
                 }
@@ -2084,37 +2090,6 @@
             }
         }
 
-        // 点击搜索按钮时调用API
-        async function searchIngredientsWithAPI() {
-            const query = document.getElementById('pantryIngredientSearch').value.trim();
-            if (!query) {
-                alert('请输入食材名称');
-                return;
-            }
-
-            try {
-                // 先搜索数据库
-                const dbResponse = await fetch(`/api/nutrition/search?query=${encodeURIComponent(query)}&number=10`);
-                const dbResult = await dbResponse.json();
-
-                if (dbResponse.ok && dbResult.code === 200 && dbResult.data.length > 0) {
-                    // 数据库中有结果，直接显示
-                    displayPantryIngredientResults(dbResult.data);
-                } else {
-                    // 数据库中没有结果，调用API
-                    const apiResponse = await fetch(`/api/nutrition/search?query=${encodeURIComponent(query)}&number=10`);
-                    const apiResult = await apiResponse.json();
-
-                    if (apiResponse.ok && apiResult.code === 200) {
-                        displayPantryIngredientResults(apiResult.data);
-                    } else {
-                        document.getElementById('pantryIngredientResults').innerHTML = '<p>未找到相关食材</p>';
-                    }
-                }
-            } catch (error) {
-                document.getElementById('pantryIngredientResults').innerHTML = '<p>搜索失败: ' + error.message + '</p>';
-            }
-        }
 
         // 显示食材搜索结果
         function displayPantryIngredientResults(ingredients) {
